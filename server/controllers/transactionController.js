@@ -14,6 +14,7 @@ const addTransaction =
         type,
         category,
         notes,
+        date,
       } = req.body;
 
       const transaction =
@@ -26,12 +27,16 @@ const addTransaction =
           type,
           category,
           notes,
+          date,
         });
 
       res.status(201).json({
+
         success: true,
+
         message:
           "Transaction added successfully",
+
         transaction,
       });
 
@@ -61,7 +66,9 @@ const getTransactions =
         });
 
       res.status(200).json({
+
         success: true,
+
         transactions,
       });
 
@@ -93,6 +100,7 @@ const updateTransaction =
       if (!transaction) {
 
         return res.status(404).json({
+
           message:
             "Transaction not found",
         });
@@ -111,9 +119,12 @@ const updateTransaction =
         );
 
       res.status(200).json({
+
         success: true,
+
         message:
           "Transaction updated successfully",
+
         updatedTransaction,
       });
 
@@ -145,6 +156,7 @@ const deleteTransaction =
       if (!transaction) {
 
         return res.status(404).json({
+
           message:
             "Transaction not found",
         });
@@ -153,7 +165,9 @@ const deleteTransaction =
       await transaction.deleteOne();
 
       res.status(200).json({
+
         success: true,
+
         message:
           "Transaction deleted successfully",
       });
@@ -183,10 +197,12 @@ const getSummary =
 
       const totalIncome =
         transactions
+
           .filter(
             (item) =>
               item.type === "income"
           )
+
           .reduce(
             (acc, item) =>
               acc + item.amount,
@@ -195,10 +211,12 @@ const getSummary =
 
       const totalExpense =
         transactions
+
           .filter(
             (item) =>
               item.type === "expense"
           )
+
           .reduce(
             (acc, item) =>
               acc + item.amount,
@@ -209,11 +227,15 @@ const getSummary =
         totalIncome - totalExpense;
 
       res.status(200).json({
+
         success: true,
 
         summary: {
+
           totalIncome,
+
           totalExpense,
+
           totalBalance,
         },
       });
@@ -230,9 +252,14 @@ const getSummary =
 
 
 module.exports = {
+
   addTransaction,
+
   getTransactions,
+
   updateTransaction,
+
   deleteTransaction,
+
   getSummary,
 };
