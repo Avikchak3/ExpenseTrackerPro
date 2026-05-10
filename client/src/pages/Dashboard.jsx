@@ -18,8 +18,33 @@ function Dashboard() {
   const [transactions, setTransactions] =
     useState([]);
 
-  const [categories, setCategories] =
-    useState([]);
+  const [categories] =
+  useState([
+
+    { name: "Salary" },
+
+    { name: "Freelancing" },
+
+    { name: "Food" },
+
+    { name: "Travel" },
+
+    { name: "Shopping" },
+
+    { name: "Entertainment" },
+
+    { name: "Housing" },
+
+    { name: "Health" },
+
+    { name: "Investments" },
+
+    { name: "Bills" },
+
+    { name: "Education" },
+
+    { name: "Other" },
+  ]);
 
   const [loading, setLoading] =
     useState(false);
@@ -80,34 +105,9 @@ function Dashboard() {
       }
     };
 
-
-  // FETCH CATEGORIES
-  const fetchCategories =
-    async () => {
-
-      try {
-
-        const response =
-          await API.get(
-            "/categories"
-          );
-
-        setCategories(
-          response.data.categories || []
-        );
-
-      } catch (error) {
-
-        console.log(error);
-      }
-    };
-
-
   useEffect(() => {
 
     fetchTransactions();
-
-    fetchCategories();
 
   }, []);
 
