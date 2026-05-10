@@ -7,7 +7,22 @@ import {
   FaWallet,
   FaArrowUp,
   FaArrowDown,
+  FaFileCsv,
+  FaExclamationTriangle,
 } from "react-icons/fa";
+
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 
 import toast from "react-hot-toast";
 
@@ -19,32 +34,21 @@ function Dashboard() {
     useState([]);
 
   const [categories] =
-  useState([
+    useState([
 
-    { name: "Salary" },
-
-    { name: "Freelancing" },
-
-    { name: "Food" },
-
-    { name: "Travel" },
-
-    { name: "Shopping" },
-
-    { name: "Entertainment" },
-
-    { name: "Housing" },
-
-    { name: "Health" },
-
-    { name: "Investments" },
-
-    { name: "Bills" },
-
-    { name: "Education" },
-
-    { name: "Other" },
-  ]);
+      { name: "Salary" },
+      { name: "Freelancing" },
+      { name: "Food" },
+      { name: "Travel" },
+      { name: "Shopping" },
+      { name: "Entertainment" },
+      { name: "Housing" },
+      { name: "Health" },
+      { name: "Investments" },
+      { name: "Bills" },
+      { name: "Education" },
+      { name: "Other" },
+    ]);
 
   const [loading, setLoading] =
     useState(false);
@@ -71,6 +75,9 @@ function Dashboard() {
   const [endDate, setEndDate] =
     useState("");
 
+  const [budgetAlert,
+    setBudgetAlert] =
+    useState(false);
 
   const [formData, setFormData] =
     useState({
@@ -84,7 +91,6 @@ function Dashboard() {
     });
 
 
-  // FETCH TRANSACTIONS
   const fetchTransactions =
     async () => {
 
@@ -105,6 +111,7 @@ function Dashboard() {
       }
     };
 
+
   useEffect(() => {
 
     fetchTransactions();
@@ -112,7 +119,6 @@ function Dashboard() {
   }, []);
 
 
-  // HANDLE INPUT
   const handleChange = (e) => {
 
     setFormData({
@@ -125,7 +131,6 @@ function Dashboard() {
   };
 
 
-  // ADD / UPDATE TRANSACTION
   const handleSubmit =
     async (e) => {
 
@@ -178,23 +183,20 @@ function Dashboard() {
           date: "",
         });
 
-        setLoading(false);
-
       } catch (error) {
-
-        setLoading(false);
 
         toast.error(
           error.response?.data?.message ||
           "Something went wrong"
         );
 
-        console.log(error);
+      } finally {
+
+        setLoading(false);
       }
     };
 
 
-  // DELETE
   const handleDelete =
     async (id) => {
 
@@ -217,7 +219,6 @@ function Dashboard() {
     };
 
 
-  // EDIT
   const handleEdit = (item) => {
 
     setEditId(item._id);
@@ -248,7 +249,6 @@ function Dashboard() {
   };
 
 
-  // FILTERS
   const filteredTransactions =
     useMemo(() => {
 
@@ -313,72 +313,19 @@ function Dashboard() {
           );
       }
 
-      if (
-        sortType === "latest"
-      ) {
-
-        filtered.sort(
-          (a, b) =>
-
-            new Date(b.date) -
-            new Date(a.date)
-        );
-
-      } else if (
-        sortType === "oldest"
-      ) {
-
-        filtered.sort(
-          (a, b) =>
-
-            new Date(a.date) -
-            new Date(b.date)
-        );
-
-      } else if (
-        sortType === "high"
-      ) {
-
-        filtered.sort(
-          (a, b) =>
-
-            b.amount -
-            a.amount
-        );
-
-      } else if (
-        sortType === "low"
-      ) {
-
-        filtered.sort(
-          (a, b) =>
-
-            a.amount -
-            b.amount
-        );
-      }
-
       return filtered;
 
     }, [
 
       transactions,
-
       search,
-
       filterType,
-
       categoryFilter,
-
-      sortType,
-
       startDate,
-
       endDate,
     ]);
 
 
-  // TOTALS
   const totalIncome =
     transactions
 
@@ -413,6 +360,167 @@ function Dashboard() {
     totalIncome - totalExpense;
 
 
+  useEffect(() => {
+
+    if (totalExpense > 30000) {
+
+      setBudgetAlert(true);
+
+    } else {
+
+      setBudgetAlert(false);
+    }
+
+  }, [totalExpense]);
+
+
+  const categoryData =
+    Object.values(
+
+      filteredTransactions.reduce(
+        (acc, item) => {
+
+          if (
+            item.type === "expense"
+          ) {
+
+            if (
+              !acc[item.category]
+            ) {
+
+              acc[item.category] = {
+
+                name:
+                  item.category,
+
+                value: 0,
+              };
+            }
+
+            acc[item.category]
+              .value += Number(
+                item.amount
+              );
+          }
+
+          return acc;
+
+        },
+        {}
+      )
+    );
+
+
+  const barData =
+    filteredTransactions.map(
+      (item) => ({
+
+        name:
+          item.title.substring(
+            0,
+            10
+          ),
+
+        amount:
+          Number(item.amount),
+      })
+    );
+
+
+  const COLORS = [
+    "#10b981",
+    "#ef4444",
+    "#3b82f6",
+    "#f59e0b",
+    "#8b5cf6",
+    "#ec4899",
+  ];
+
+
+  const exportCSV = () => {
+
+    const headers = [
+
+      "Title",
+      "Amount",
+      "Type",
+      "Category",
+      "Date",
+      "Notes",
+    ];
+
+    const rows =
+      filteredTransactions.map(
+        (item) => [
+
+          item.title,
+
+          item.amount,
+
+          item.type,
+
+          item.category,
+
+          item.date
+            ? new Date(item.date)
+                .toLocaleDateString()
+            : "",
+
+          item.notes,
+        ]
+      );
+
+    const csvContent =
+      [
+
+        headers,
+
+        ...rows,
+      ]
+
+        .map((e) =>
+          e.join(",")
+        )
+
+        .join("\n");
+
+    const blob =
+      new Blob(
+        [csvContent],
+        {
+          type:
+            "text/csv;charset=utf-8;",
+        }
+      );
+
+    const link =
+      document.createElement("a");
+
+    const url =
+      URL.createObjectURL(blob);
+
+    link.setAttribute(
+      "href",
+      url
+    );
+
+    link.setAttribute(
+      "download",
+      "transactions.csv"
+    );
+
+    document.body.appendChild(
+      link
+    );
+
+    link.click();
+
+    document.body.removeChild(
+      link
+    );
+  };
+
+
   return (
 
     <div className="min-h-screen bg-slate-950 text-white p-6">
@@ -421,7 +529,7 @@ function Dashboard() {
 
         {/* HEADER */}
 
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10">
 
           <div>
 
@@ -429,36 +537,68 @@ function Dashboard() {
               Expense Dashboard
             </h1>
 
-            <p className="text-slate-400 mt-2 text-lg">
-              Track your money smartly
+            <p className="text-slate-400 mt-2">
+              Smart financial tracking
             </p>
 
           </div>
 
 
-          <button
-            onClick={() => {
+          <div className="flex gap-3">
 
-              localStorage.removeItem(
-                "token"
-              );
+            <button
+              onClick={exportCSV}
+              className="bg-emerald-500 hover:bg-emerald-600 px-5 py-3 rounded-xl flex items-center gap-2"
+            >
 
-              window.location.href =
-                "/";
-            }}
-            className="bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl flex items-center gap-2"
-          >
+              <FaFileCsv />
 
-            <FaSignOutAlt />
+              Export CSV
 
-            Logout
+            </button>
 
-          </button>
+
+            <button
+              onClick={() => {
+
+                localStorage.removeItem(
+                  "token"
+                );
+
+                window.location.href =
+                  "/";
+              }}
+              className="bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl flex items-center gap-2"
+            >
+
+              <FaSignOutAlt />
+
+              Logout
+
+            </button>
+
+          </div>
 
         </div>
 
 
-        {/* SUMMARY CARDS */}
+        {/* ALERT */}
+
+        {
+          budgetAlert && (
+
+            <div className="bg-yellow-500 text-black rounded-2xl p-4 mb-6 flex items-center gap-3">
+
+              <FaExclamationTriangle />
+
+              Warning: Your expenses exceeded ₹30,000
+
+            </div>
+          )
+        }
+
+
+        {/* SUMMARY */}
 
         <div className="grid md:grid-cols-3 gap-6 mb-10">
 
@@ -466,9 +606,7 @@ function Dashboard() {
 
             <div>
 
-              <p className="text-lg">
-                Total Income
-              </p>
+              <p>Total Income</p>
 
               <h2 className="text-4xl font-bold mt-2">
                 ₹ {totalIncome}
@@ -485,9 +623,7 @@ function Dashboard() {
 
             <div>
 
-              <p className="text-lg">
-                Total Expense
-              </p>
+              <p>Total Expense</p>
 
               <h2 className="text-4xl font-bold mt-2">
                 ₹ {totalExpense}
@@ -504,9 +640,7 @@ function Dashboard() {
 
             <div>
 
-              <p className="text-lg">
-                Total Balance
-              </p>
+              <p>Total Balance</p>
 
               <h2 className="text-4xl font-bold mt-2">
                 ₹ {totalBalance}
@@ -521,354 +655,103 @@ function Dashboard() {
         </div>
 
 
-        {/* ADD TRANSACTION */}
+        {/* CHARTS */}
 
-        <div className="bg-slate-900 rounded-3xl p-6 mb-10">
+        <div className="grid md:grid-cols-2 gap-6 mb-10">
 
-          <h2 className="text-3xl font-bold mb-6">
+          <div className="bg-slate-900 rounded-3xl p-6">
 
-            {
-              editId
-                ? "Update Transaction"
-                : "Add Transaction"
-            }
+            <h2 className="text-2xl font-bold mb-6">
+              Expense Categories
+            </h2>
 
-          </h2>
+            <div className="h-80">
 
-          <form
-            onSubmit={handleSubmit}
-            className="grid md:grid-cols-2 gap-4"
-          >
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+              >
 
-            <input
-              type="text"
-              name="title"
-              placeholder="Transaction Title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
-            />
+                <PieChart>
 
-            <input
-              type="number"
-              name="amount"
-              placeholder="Amount"
-              value={formData.amount}
-              onChange={handleChange}
-              required
-              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
-            />
-
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
-            >
-
-              <option value="expense">
-                Expense
-              </option>
-
-              <option value="income">
-                Income
-              </option>
-
-            </select>
-
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
-            >
-
-              <option value="">
-                Select Category
-              </option>
-
-              {
-                categories.map((cat) => (
-
-                  <option
-                    key={cat._id}
-                    value={cat.name}
+                  <Pie
+                    data={categoryData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={100}
+                    label
                   >
-                    {cat.name}
-                  </option>
 
-                ))
-              }
+                    {
+                      categoryData.map(
+                        (entry, index) => (
 
-            </select>
+                          <Cell
+                            key={index}
+                            fill={
+                              COLORS[
+                                index %
+                                COLORS.length
+                              ]
+                            }
+                          />
 
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
-            />
+                        )
+                      )
+                    }
 
-            <input
-              type="text"
-              name="notes"
-              placeholder="Notes"
-              value={formData.notes}
-              onChange={handleChange}
-              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
-            />
+                  </Pie>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-emerald-500 hover:bg-emerald-600 rounded-xl py-3 font-semibold md:col-span-2"
-            >
+                  <Tooltip />
 
-              {
-                loading
-                  ? "Processing..."
-                  : editId
-                  ? "Update Transaction"
-                  : "Add Transaction"
-              }
+                </PieChart>
 
-            </button>
+              </ResponsiveContainer>
 
-          </form>
-
-        </div>
-
-
-        {/* FILTERS */}
-
-        <div className="bg-slate-900 rounded-3xl p-6 mb-10">
-
-          <h2 className="text-3xl font-bold mb-6">
-            Search & Filters
-          </h2>
-
-          <div className="grid md:grid-cols-6 gap-4">
-
-            <input
-              type="text"
-              placeholder="Search..."
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              className="bg-slate-800 rounded-xl px-4 py-3"
-            />
-
-            <select
-              value={filterType}
-              onChange={(e) =>
-                setFilterType(
-                  e.target.value
-                )
-              }
-              className="bg-slate-800 rounded-xl px-4 py-3"
-            >
-
-              <option value="all">
-                All
-              </option>
-
-              <option value="income">
-                Income
-              </option>
-
-              <option value="expense">
-                Expense
-              </option>
-
-            </select>
-
-            <select
-              value={categoryFilter}
-              onChange={(e) =>
-                setCategoryFilter(
-                  e.target.value
-                )
-              }
-              className="bg-slate-800 rounded-xl px-4 py-3"
-            >
-
-              <option value="all">
-                All Categories
-              </option>
-
-              {
-                categories.map((cat) => (
-
-                  <option
-                    key={cat._id}
-                    value={cat.name}
-                  >
-                    {cat.name}
-                  </option>
-
-                ))
-              }
-
-            </select>
-
-            <select
-              value={sortType}
-              onChange={(e) =>
-                setSortType(
-                  e.target.value
-                )
-              }
-              className="bg-slate-800 rounded-xl px-4 py-3"
-            >
-
-              <option value="latest">
-                Latest
-              </option>
-
-              <option value="oldest">
-                Oldest
-              </option>
-
-              <option value="high">
-                Highest
-              </option>
-
-              <option value="low">
-                Lowest
-              </option>
-
-            </select>
-
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) =>
-                setStartDate(
-                  e.target.value
-                )
-              }
-              className="bg-slate-800 rounded-xl px-4 py-3"
-            />
-
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) =>
-                setEndDate(
-                  e.target.value
-                )
-              }
-              className="bg-slate-800 rounded-xl px-4 py-3"
-            />
+            </div>
 
           </div>
 
-        </div>
 
+          <div className="bg-slate-900 rounded-3xl p-6">
 
-        {/* TRANSACTIONS */}
+            <h2 className="text-2xl font-bold mb-6">
+              Transaction Analytics
+            </h2>
 
-        <div className="bg-slate-900 rounded-3xl p-6">
+            <div className="h-80">
 
-          <h2 className="text-3xl font-bold mb-6">
-            Transactions
-          </h2>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+              >
 
-          <div className="space-y-4">
+                <BarChart
+                  data={barData}
+                >
 
-            {
-              filteredTransactions.length > 0
-              ? (
-                filteredTransactions.map((item) => (
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                  />
 
-                  <div
-                    key={item._id}
-                    className="bg-slate-800 p-5 rounded-2xl flex flex-col md:flex-row md:justify-between md:items-center gap-4"
-                  >
+                  <XAxis
+                    dataKey="name"
+                  />
 
-                    <div>
+                  <YAxis />
 
-                      <h3 className="text-xl font-semibold">
-                        {item.title}
-                      </h3>
+                  <Tooltip />
 
-                      <p className="text-slate-400">
-                        {item.category}
-                      </p>
+                  <Bar
+                    dataKey="amount"
+                    fill="#10b981"
+                  />
 
-                      <p className="text-slate-500 text-sm">
+                </BarChart>
 
-                        {
-                          item.date
-                          ? new Date(item.date)
-                              .toLocaleDateString()
-                          : ""
-                        }
+              </ResponsiveContainer>
 
-                      </p>
-
-                    </div>
-
-
-                    <div className="flex items-center gap-4">
-
-                      <div
-                        className={`text-2xl font-bold ${
-                          item.type === "income"
-                          ? "text-emerald-400"
-                          : "text-red-400"
-                        }`}
-                      >
-
-                        ₹ {item.amount}
-
-                      </div>
-
-
-                      <button
-                        onClick={() =>
-                          handleEdit(item)
-                        }
-                        className="bg-blue-500 hover:bg-blue-600 p-3 rounded-xl"
-                      >
-
-                        <FaEdit />
-
-                      </button>
-
-
-                      <button
-                        onClick={() =>
-                          handleDelete(item._id)
-                        }
-                        className="bg-red-500 hover:bg-red-600 p-3 rounded-xl"
-                      >
-
-                        <FaTrash />
-
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                ))
-              )
-              : (
-
-                <div className="text-center text-slate-400 py-10">
-
-                  No transactions found
-
-                </div>
-
-              )
-            }
+            </div>
 
           </div>
 
