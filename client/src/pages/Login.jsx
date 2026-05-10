@@ -13,72 +13,84 @@ import API from "../services/api";
 function Login() {
 
   const navigate = useNavigate();
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [formData, setFormData] =
+    useState({
+      email: "",
+      password: "",
+    });
+
+
   useEffect(() => {
 
-  const token = localStorage.getItem(
-    "token"
-  );
+    const token =
+      localStorage.getItem("token");
 
-  if (token) {
+    if (token) {
 
-    navigate("/dashboard");
-  }
+      navigate("/dashboard");
+    }
 
-}, []);
-
-  const [loading, setLoading] = useState(false);
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  }, [navigate]);
 
 
   const handleChange = (e) => {
 
     setFormData({
+
       ...formData,
-      [e.target.name]: e.target.value,
+
+      [e.target.name]:
+        e.target.value,
     });
   };
 
 
-  const handleSubmit = async (e) => {
+  const handleSubmit =
+    async (e) => {
 
-    e.preventDefault();
+      e.preventDefault();
 
-    try {
+      try {
 
-      setLoading(true);
+        setLoading(true);
 
-      const response = await API.post(
-        "/auth/login",
-        formData
-      );
+        const response =
+          await API.post(
+            "/auth/login",
+            formData
+          );
 
-      localStorage.setItem(
-        "token",
-        response.data.token
-      );
+        localStorage.setItem(
+          "token",
+          response.data.token
+        );
 
-      toast.success(
-        response.data.message
-      );
+        toast.success(
+          response.data.message
+        );
 
-      navigate("/dashboard");
+        navigate("/dashboard");
 
-      setLoading(false);
+      } catch (error) {
 
-    } catch (error) {
+        console.log(error);
 
-      setLoading(false);
+        toast.error(
 
-      toast.error(
-        error.response?.data?.message ||
-        "Login failed"
-      );
-    }
-  };
+          error.response?.data?.message ||
+
+          "Login failed"
+        );
+
+      } finally {
+
+        setLoading(false);
+      }
+    };
 
 
   return (
@@ -86,9 +98,21 @@ function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4">
 
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+
+        initial={{
+          opacity: 0,
+          y: 30,
+        }}
+
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+
+        transition={{
+          duration: 0.5,
+        }}
+
         className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl"
       >
 
@@ -120,7 +144,9 @@ function Login() {
             type="email"
             name="email"
             placeholder="Enter email"
+            value={formData.email}
             onChange={handleChange}
+            required
             className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-emerald-500"
           />
 
@@ -129,7 +155,9 @@ function Login() {
             type="password"
             name="password"
             placeholder="Enter password"
+            value={formData.password}
             onChange={handleChange}
+            required
             className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-emerald-500"
           />
 
