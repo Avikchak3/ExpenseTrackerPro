@@ -91,6 +91,7 @@ function Dashboard() {
     });
 
 
+  // FETCH TRANSACTIONS
   const fetchTransactions =
     async () => {
 
@@ -119,6 +120,7 @@ function Dashboard() {
   }, []);
 
 
+  // HANDLE INPUT
   const handleChange = (e) => {
 
     setFormData({
@@ -131,6 +133,7 @@ function Dashboard() {
   };
 
 
+  // ADD / UPDATE TRANSACTION
   const handleSubmit =
     async (e) => {
 
@@ -197,6 +200,7 @@ function Dashboard() {
     };
 
 
+  // DELETE TRANSACTION
   const handleDelete =
     async (id) => {
 
@@ -219,6 +223,7 @@ function Dashboard() {
     };
 
 
+  // EDIT TRANSACTION
   const handleEdit = (item) => {
 
     setEditId(item._id);
@@ -249,6 +254,7 @@ function Dashboard() {
   };
 
 
+  // FILTERS
   const filteredTransactions =
     useMemo(() => {
 
@@ -313,6 +319,25 @@ function Dashboard() {
           );
       }
 
+      if (sortType === "latest") {
+
+        filtered.sort(
+          (a, b) =>
+
+            new Date(b.date) -
+            new Date(a.date)
+        );
+
+      } else {
+
+        filtered.sort(
+          (a, b) =>
+
+            new Date(a.date) -
+            new Date(b.date)
+        );
+      }
+
       return filtered;
 
     }, [
@@ -323,9 +348,11 @@ function Dashboard() {
       categoryFilter,
       startDate,
       endDate,
+      sortType,
     ]);
 
 
+  // SUMMARY
   const totalIncome =
     transactions
 
@@ -360,6 +387,7 @@ function Dashboard() {
     totalIncome - totalExpense;
 
 
+  // BUDGET ALERT
   useEffect(() => {
 
     if (totalExpense > 30000) {
@@ -374,6 +402,7 @@ function Dashboard() {
   }, [totalExpense]);
 
 
+  // PIE CHART
   const categoryData =
     Object.values(
 
@@ -411,6 +440,7 @@ function Dashboard() {
     );
 
 
+  // BAR GRAPH
   const barData =
     filteredTransactions.map(
       (item) => ({
@@ -437,6 +467,7 @@ function Dashboard() {
   ];
 
 
+  // CSV EXPORT
   const exportCSV = () => {
 
     const headers = [
@@ -655,6 +686,227 @@ function Dashboard() {
         </div>
 
 
+        {/* ADD TRANSACTION */}
+
+        <div className="bg-slate-900 rounded-3xl p-6 mb-10">
+
+          <h2 className="text-2xl font-bold mb-6">
+
+            {
+              editId
+                ? "Edit Transaction"
+                : "Add Transaction"
+            }
+
+          </h2>
+
+
+          <form
+            onSubmit={handleSubmit}
+            className="grid md:grid-cols-2 gap-4"
+          >
+
+            <input
+              type="text"
+              name="title"
+              placeholder="Title"
+              value={formData.title}
+              onChange={handleChange}
+              required
+              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+            />
+
+            <input
+              type="number"
+              name="amount"
+              placeholder="Amount"
+              value={formData.amount}
+              onChange={handleChange}
+              required
+              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+            />
+
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+            >
+
+              <option value="income">
+                Income
+              </option>
+
+              <option value="expense">
+                Expense
+              </option>
+
+            </select>
+
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+            >
+
+              <option value="">
+                Select Category
+              </option>
+
+              {
+                categories.map(
+                  (item, index) => (
+
+                    <option
+                      key={index}
+                      value={item.name}
+                    >
+                      {item.name}
+                    </option>
+
+                  )
+                )
+              }
+
+            </select>
+
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+            />
+
+            <input
+              type="text"
+              name="notes"
+              placeholder="Notes"
+              value={formData.notes}
+              onChange={handleChange}
+              className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-emerald-500 hover:bg-emerald-600 py-3 rounded-xl font-semibold md:col-span-2"
+            >
+
+              {
+                loading
+                  ? "Processing..."
+                  : editId
+                  ? "Update Transaction"
+                  : "Add Transaction"
+              }
+
+            </button>
+
+          </form>
+
+        </div>
+
+
+        {/* FILTERS */}
+
+        <div className="bg-slate-900 rounded-3xl p-6 mb-10 grid md:grid-cols-5 gap-4">
+
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) =>
+              setSearch(
+                e.target.value
+              )
+            }
+            className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+          />
+
+          <select
+            value={filterType}
+            onChange={(e) =>
+              setFilterType(
+                e.target.value
+              )
+            }
+            className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+          >
+
+            <option value="all">
+              All Types
+            </option>
+
+            <option value="income">
+              Income
+            </option>
+
+            <option value="expense">
+              Expense
+            </option>
+
+          </select>
+
+          <select
+            value={categoryFilter}
+            onChange={(e) =>
+              setCategoryFilter(
+                e.target.value
+              )
+            }
+            className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+          >
+
+            <option value="all">
+              All Categories
+            </option>
+
+            {
+              categories.map(
+                (item, index) => (
+
+                  <option
+                    key={index}
+                    value={item.name}
+                  >
+                    {item.name}
+                  </option>
+
+                )
+              )
+            }
+
+          </select>
+
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) =>
+              setStartDate(
+                e.target.value
+              )
+            }
+            className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+          />
+
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) =>
+              setEndDate(
+                e.target.value
+              )
+            }
+            className="bg-slate-800 rounded-xl px-4 py-3 outline-none"
+          />
+
+        </div>
+
+
         {/* CHARTS */}
 
         <div className="grid md:grid-cols-2 gap-6 mb-10">
@@ -752,6 +1004,138 @@ function Dashboard() {
               </ResponsiveContainer>
 
             </div>
+
+          </div>
+
+        </div>
+
+
+        {/* TRANSACTIONS */}
+
+        <div className="bg-slate-900 rounded-3xl p-6">
+
+          <h2 className="text-2xl font-bold mb-6">
+            Transactions
+          </h2>
+
+
+          <div className="overflow-x-auto">
+
+            <table className="w-full">
+
+              <thead>
+
+                <tr className="text-left border-b border-slate-700">
+
+                  <th className="py-4">
+                    Title
+                  </th>
+
+                  <th>
+                    Amount
+                  </th>
+
+                  <th>
+                    Type
+                  </th>
+
+                  <th>
+                    Category
+                  </th>
+
+                  <th>
+                    Date
+                  </th>
+
+                  <th>
+                    Actions
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody>
+
+                {
+                  filteredTransactions.map(
+                    (item) => (
+
+                      <tr
+                        key={item._id}
+                        className="border-b border-slate-800"
+                      >
+
+                        <td className="py-4">
+                          {item.title}
+                        </td>
+
+                        <td>
+                          ₹ {item.amount}
+                        </td>
+
+                        <td className="capitalize">
+                          {item.type}
+                        </td>
+
+                        <td>
+                          {item.category}
+                        </td>
+
+                        <td>
+
+                          {
+                            new Date(
+                              item.date
+                            ).toLocaleDateString()
+                          }
+
+                        </td>
+
+                        <td>
+
+                          <div className="flex gap-3">
+
+                            <button
+                              onClick={() =>
+                                handleEdit(
+                                  item
+                                )
+                              }
+                              className="text-blue-400"
+                            >
+
+                              <FaEdit />
+
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                handleDelete(
+                                  item._id
+                                )
+                              }
+                              className="text-red-400"
+                            >
+
+                              <FaTrash />
+
+                            </button>
+
+                          </div>
+
+                        </td>
+
+                      </tr>
+
+                    )
+                  )
+                }
+
+              </tbody>
+
+            </table>
 
           </div>
 
